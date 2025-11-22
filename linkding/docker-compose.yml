@@ -1,5 +1,3 @@
-version: "1.0"
-
 services:
   linkding:
     container_name: "${LD_CONTAINER_NAME:-linkding}"
@@ -11,3 +9,9 @@ services:
     env_file:
       - .env
     restart: unless-stopped
+    networks:
+      - homelab
+
+networks:
+  homelab:
+    external: true
