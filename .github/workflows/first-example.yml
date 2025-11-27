@@ -9,7 +9,6 @@ jobs:
       - name: Welcome message
         run: echo "Hello, this is the first workflow!"
 
-      - name: List files
-        run: ls -la
-
+      - name: List
+        run: ls
 
