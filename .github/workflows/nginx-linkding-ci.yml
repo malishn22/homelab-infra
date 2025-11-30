@@ -1,16 +1,18 @@
-name: CI - Nginx & Compose check
+name: CI for Nginx & Linkding
 
 on:
   push:
     paths:
       - 'nginx/**'
+      - 'linkding/**'
       - '.github/workflows/nginx-compose-ci.yml'
   pull_request:
     paths:
       - 'nginx/**'
+      - 'linkding/**'
 
 jobs:
-  validate:
+  nginx:
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -28,3 +30,20 @@ jobs:
             --add-host=linkding:127.0.0.1 \
             -v "$PWD/conf.d:/etc/nginx/conf.d:ro" \
             nginx:stable-alpine nginx -t
+  linkding:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: linkding
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+      - name: Validate docker-compose
+        run: docker compose config
+      - name: Validate Linkding config
+        run: |
+          docker run --rm \
+            -v "$PWD/config:/app/config:ro" \
+            linkding/linkding:latest \
+            python manage.py check --deployment --settings=config.settings.production
+
