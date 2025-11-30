@@ -1,0 +1,27 @@
+name: CI - Nginx & Compose check
+
+on:
+  push:
+    paths:
+      - 'docker-compose.yml'
+      - 'conf.d/**'
+      - '.github/workflows/nginx-compose-ci.yml'
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Validate docker-compose
+        run: docker compose config
+
+      - name: Validate nginx config
+        run: |
+          docker run --rm \
+            -v "$PWD/conf.d:/etc/nginx/conf.d:ro" \
+            nginx:stable-alpine nginx -t
+
