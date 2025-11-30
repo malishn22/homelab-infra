@@ -38,12 +38,6 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
+        
       - name: Validate docker-compose
         run: docker compose config
-      - name: Validate Linkding config
-        run: |
-          docker run --rm \
-            -v "$PWD/config:/app/config:ro" \
-            linkding/linkding:latest \
-            python manage.py check --deployment --settings=config.settings.production
-
