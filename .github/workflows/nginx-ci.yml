@@ -1,15 +1,13 @@
-name: CI for Nginx & Linkding
+name: CI for Nginx
 
 on:
   push:
     paths:
       - 'nginx/**'
-      - 'linkding/**'
-      - '.github/workflows/nginx-linkding-ci.yml'
+      - '.github/workflows/nginx-ci.yml'
   pull_request:
     paths:
       - 'nginx/**'
-      - 'linkding/**'
 
 jobs:
   nginx:
@@ -30,14 +28,3 @@ jobs:
             --add-host=linkding:127.0.0.1 \
             -v "$PWD/conf.d:/etc/nginx/conf.d:ro" \
             nginx:stable-alpine nginx -t
-  linkding:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: linkding
-    steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
-        
-      - name: Validate docker-compose
-        run: docker compose config
