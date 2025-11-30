@@ -5,7 +5,7 @@ on:
     paths:
       - 'nginx/**'
       - 'linkding/**'
-      - '.github/workflows/nginx-ci.yml'
+      - '.github/workflows/nginx-linkding-ci.yml'
   pull_request:
     paths:
       - 'nginx/**'
