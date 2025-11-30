@@ -3,15 +3,18 @@ name: CI - Nginx & Compose check
 on:
   push:
     paths:
-      - 'docker-compose.yml'
-      - 'conf.d/**'
+      - 'nginx/**'
       - '.github/workflows/nginx-compose-ci.yml'
   pull_request:
+    paths:
+      - 'nginx/**'
 
 jobs:
   validate:
     runs-on: ubuntu-latest
-
+    defaults:
+      run:
+        working-directory: nginx
     steps:
       - name: Checkout repo
         uses: actions/checkout@v4
