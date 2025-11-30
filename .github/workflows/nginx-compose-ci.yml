@@ -25,6 +25,6 @@ jobs:
       - name: Validate nginx config
         run: |
           docker run --rm \
+            --add-host=linkding:127.0.0.1 \
             -v "$PWD/conf.d:/etc/nginx/conf.d:ro" \
             nginx:stable-alpine nginx -t
-
