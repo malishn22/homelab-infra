@@ -1,1 +1,11 @@
 **/.env
+# Linkding
+linkding/data/
+linkding/.env
+
+# Prometheus & Node Exporter
+monitoring/prometheus/*
+!monitoring/prometheus/
+!monitoring/prometheus/prometheus.yml
+monitoring/node_exporter/
+
