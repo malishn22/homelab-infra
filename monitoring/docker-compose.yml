@@ -7,6 +7,8 @@ services:
       - prometheus-data:/prometheus
     ports:
       - "9091:9090"
+    networks:
+      - homelab
     restart: unless-stopped
 
   node-exporter:
@@ -14,6 +16,8 @@ services:
     container_name: node-exporter
     command:
       - '--path.rootfs=/host'
+    networks:
+      - homelab
     volumes:
       - '/:/host:ro,rslave'
     restart: unless-stopped
@@ -27,6 +31,8 @@ services:
       - GF_PLUGINS_PREINSTALL=grafana-clock-panel,grafana-polystat-panel
     ports:
       - '3000:3000'
+    networks:
+      - homelab
     volumes:
       - 'grafana_storage:/var/lib/grafana'
    
@@ -34,7 +40,7 @@ services:
     image: nginx/nginx-prometheus-exporter:latest
     container_name: nginx-exporter
     command:
-      - -nginx.scrape-uri=http://nginx-reverse-proxy:8080/stub_status
+      - -nginx.scrape-uri=http://nginx:8080/stub_status
     ports:
       - "9113:9113"
     networks:
