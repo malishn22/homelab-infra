@@ -2,10 +2,37 @@ services:
   nginx:
     container_name: "${NGINX_CONTAINER_NAME:-nginx-reverse-proxy}"
     image: nginx:latest
+    env_file:
+      - ./.env
+      - ../minecraft/.env
     ports:
       - "${NGINX_HOST_PORT:-80}:80"
     volumes:
       - ./conf.d:/etc/nginx/conf.d
+    command: >
+      /bin/sh -c "set -e;
+      : \"${MINECRAFT_API_PORT:-8000}\";
+      : \"${MINECRAFT_WEB_INTERNAL_PORT:-80}\";
+      : \"${MINECRAFT_WEB_SERVER_NAME:-minecraft.home}\";
+        cat > /etc/nginx/conf.d/minecraft.conf <<EOF
+        server {
+            listen 80;
+            server_name ${MINECRAFT_WEB_SERVER_NAME:-minecraft.home};
+
+            location /api/ {
+                proxy_pass http://minecraft-api:${MINECRAFT_API_PORT:-8000};
+                proxy_set_header Host $$host;
+                proxy_set_header X-Real-IP $$remote_addr;
+            }
+
+            location / {
+                proxy_pass http://minecraft-web:${MINECRAFT_WEB_INTERNAL_PORT:-80};
+                proxy_set_header Host $$host;
+                proxy_set_header X-Real-IP $$remote_addr;
+            }
+        }
+        EOF
+      exec nginx -g 'daemon off;'"
     networks:
       - homelab
     restart: unless-stopped
@@ -13,3 +40,4 @@ services:
 networks:
   homelab:
     external: true
+    name: homelab
