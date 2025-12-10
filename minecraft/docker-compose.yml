@@ -6,7 +6,7 @@ services:
     container_name: minecraft-api
     env_file:
       - ./.env
-      - ../apps/minecraft/backend/.env
+      - ../../apps/minecraft/backend/.env
     environment:
       UVICORN_RELOAD: "false"
       UVICORN_HOST: 0.0.0.0
