@@ -19,6 +19,11 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
+      - name: Prepare env files
+        run: |
+          cp .env.example .env
+          cp ../minecraft/.env.example ../minecraft/.env
+
       - name: Validate docker-compose
         run: docker compose config
 
