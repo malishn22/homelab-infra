@@ -9,3 +9,5 @@ monitoring/prometheus/*
 !monitoring/prometheus/prometheus.yml
 monitoring/node_exporter/
 
+# Nginx
+nginx/certs/
