@@ -12,6 +12,12 @@ services:
       UVICORN_HOST: 0.0.0.0
       UVICORN_PORT: ${MINECRAFT_API_PORT}
       DATABASE_URL: postgresql://${MINECRAFT_DB_USER}:${MINECRAFT_DB_PASSWORD}@${MINECRAFT_DB_HOST}:${MINECRAFT_DB_PORT}/${MINECRAFT_DB_NAME}
+      CONTAINER_DATA_ROOT: /data
+      HOST_SERVERS_ROOT: /home/mali/homelab/apps/minecraft/backend/data/servers
+    volumes:
+      - ../../apps/minecraft/backend/data/instances:/data/instances
+      - ../../apps/minecraft/backend/data/servers:/data/servers
+      - /var/run/docker.sock:/var/run/docker.sock
     ports:
       - "${MINECRAFT_API_PORT}:${MINECRAFT_API_PORT}"
     depends_on:
