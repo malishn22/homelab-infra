@@ -1,7 +1,7 @@
 FROM python:3.13-slim
 WORKDIR /app
 
-ENV PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1
+ENV PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1 PYTHONPATH=/app
 
 # Expect build context at repo root; copy backend sources explicitly
 COPY apps/minecraft/backend/requirements.txt ./requirements.txt
