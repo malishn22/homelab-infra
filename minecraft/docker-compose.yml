@@ -4,6 +4,8 @@ services:
       context: ../..
       dockerfile: ./infra/minecraft/backend/Dockerfile
     container_name: minecraft-api
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     env_file:
       - ./.env
       - ../../apps/minecraft/backend/.env
@@ -11,7 +13,6 @@ services:
       UVICORN_RELOAD: "false"
       UVICORN_HOST: 0.0.0.0
       UVICORN_PORT: ${MINECRAFT_API_PORT}
-      DATABASE_URL: postgresql://${MINECRAFT_DB_USER}:${MINECRAFT_DB_PASSWORD}@${MINECRAFT_DB_HOST}:${MINECRAFT_DB_PORT}/${MINECRAFT_DB_NAME}
       CONTAINER_DATA_ROOT: /data
       HOST_SERVERS_ROOT: /home/mali/homelab/apps/minecraft/backend/data/servers
     volumes:
@@ -23,8 +24,6 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     ports:
       - "${MINECRAFT_API_PORT}:${MINECRAFT_API_PORT}"
-    depends_on:
-      - minecraft-db
     networks:
       - homelab
     restart: unless-stopped
@@ -46,26 +45,7 @@ services:
       - homelab
     restart: unless-stopped
 
-  minecraft-db:
-    image: postgres:16-alpine
-    container_name: ${MINECRAFT_DB_HOST}
-    hostname: ${MINECRAFT_DB_HOST}
-    environment:
-      POSTGRES_DB: ${MINECRAFT_DB_NAME}
-      POSTGRES_USER: ${MINECRAFT_DB_USER}
-      POSTGRES_PASSWORD: ${MINECRAFT_DB_PASSWORD}
-    volumes:
-      - minecraft-db-data:/var/lib/postgresql/data
-    networks:
-      homelab:
-        aliases:
-          - ${MINECRAFT_DB_HOST}
-    restart: unless-stopped
-
 networks:
   homelab:
     external: true
     name: homelab
-
-volumes:
-  minecraft-db-data: {}
