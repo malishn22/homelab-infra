@@ -17,6 +17,9 @@ services:
     volumes:
       - ../../apps/minecraft/backend/data/instances:/data/instances
       - ../../apps/minecraft/backend/data/servers:/data/servers
+      - ../../apps/minecraft/backend/data/server-defaults.properties:/data/server-defaults.properties
+      - ../../apps/minecraft/backend/data/whitelist-defaults.json:/data/whitelist-defaults.json
+      - ../../apps/minecraft/backend/data/ops-defaults.json:/data/ops-defaults.json
       - /var/run/docker.sock:/var/run/docker.sock
     ports:
       - "${MINECRAFT_API_PORT}:${MINECRAFT_API_PORT}"
