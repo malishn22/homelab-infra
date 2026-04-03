@@ -25,4 +25,3 @@ docker compose up -d
 
 # After that, open this in your browser:
 # http://bookmark.home
-

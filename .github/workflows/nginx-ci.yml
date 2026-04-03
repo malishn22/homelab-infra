@@ -22,7 +22,7 @@ jobs:
       - name: Prepare env files
         run: |
           cp .env.example .env
-          cp ../minecraft/.env.example ../minecraft/.env
+          cp ../../apps/minecraft/.env.example ../../apps/minecraft/.env
 
       - name: Generate test certificates
         run: |
