@@ -106,6 +106,23 @@ They all join the `homelab` Docker network automatically.
 
 ---
 
+## ✏️ Updating a Dashboard
+
+Provisioned dashboards load from `grafana/dashboards/*.json` on startup — the
+JSON file is the source of truth, **not** the Grafana database. UI edits save to
+the DB and are **overwritten on the next restart/redeploy**. To make a change
+stick:
+
+1. Edit the dashboard in the Grafana UI until it looks right.
+2. Dashboard settings (gear) → **JSON Model** → copy the whole model.
+3. Paste it over the matching file, e.g. `grafana/dashboards/ghms.json`.
+4. Check the panel datasource `uid` is still `prometheus-homelab` (a fresh
+   export can revert it to a random value — fix it back, or a clean deploy
+   shows "datasource not found").
+5. Commit, push, then redeploy / restart Grafana.
+
+---
+
 ## 📝 Notes
 
 - This stack is fully isolated from Linkding.
