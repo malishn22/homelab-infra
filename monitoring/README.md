@@ -28,10 +28,23 @@ Scrapes metrics from the main Nginx reverse proxy (For test purposes).
 
 ---
 
+### **GHMS Backend**
+The GHMS (Minecraft manager) backend exposes app-level metrics at `/metrics`
+(fleet size, lifecycle events, backups, modpack cache, HTTP stats).
+
+- Scraped over the `homelab` network at `ghms-backend:8000` (job `ghms`).
+
+---
+
 ### **Grafana**
 Visualizes data coming from Prometheus.
 
 - Accessible in browser on port `3000` by default.
+- Admin credentials come from `.env` (`GF_SECURITY_ADMIN_USER` /
+  `GF_SECURITY_ADMIN_PASSWORD`) — see `.env.example`.
+- The Prometheus datasource **and** dashboards are auto-provisioned from
+  `grafana/provisioning/` on startup, so a fresh deploy comes up preconfigured.
+  The GHMS dashboard lives in `grafana/dashboards/ghms.json`.
 
 ---
 
@@ -41,6 +54,13 @@ Visualizes data coming from Prometheus.
 monitoring/
 ├─ prometheus/
 │  └─ prometheus.yml           # Prometheus scrape config
+├─ grafana/
+│  ├─ provisioning/
+│  │  ├─ datasources/          # Auto-registered Prometheus datasource
+│  │  └─ dashboards/           # Dashboard provider config
+│  └─ dashboards/
+│     └─ ghms.json             # GHMS dashboard definition
+├─ .env.example                # Grafana admin vars (copy to .env)
 └─ docker-compose.yml          # Prometheus, Grafana, Node Exporter, Nginx Exporter
 ```
 
@@ -89,5 +109,9 @@ They all join the `homelab` Docker network automatically.
 ## 📝 Notes
 
 - This stack is fully isolated from Linkding.
-- Prometheus scrapes everything via container DNS, not via host ports.  
-- Grafana dashboards are not auto-provisioned yet
+- Prometheus scrapes everything via container DNS, not via host ports.
+- The Grafana datasource and dashboards are auto-provisioned from
+  `grafana/provisioning/`. Edit dashboards in git (the JSON), not in the UI —
+  provisioned dashboards are marked non-editable in place.
+- Copy `.env.example` to `.env` and set a Grafana admin password before first
+  run; compose will refuse to start without `GF_SECURITY_ADMIN_PASSWORD`.
