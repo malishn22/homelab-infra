@@ -31,7 +31,7 @@
       },
       "id": 12,
       "panels": [],
-      "title": "Row title",
+      "title": "Fleet Health",
       "type": "row"
     },
     {
@@ -672,7 +672,7 @@
           "type": "stat"
         }
       ],
-      "title": "Row title",
+      "title": "Reliability",
       "type": "row"
     },
     {
@@ -780,7 +780,7 @@
           "type": "timeseries"
         }
       ],
-      "title": "Row title",
+      "title": "API",
       "type": "row"
     }
   ],
