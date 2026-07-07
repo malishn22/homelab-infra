@@ -155,6 +155,7 @@
           "options": {
             "excludeByName": {
               "Time": true,
+              "Value": true,
               "__name__": true,
               "app": true,
               "instance": true,
@@ -214,7 +215,7 @@
         "colorMode": "value",
         "graphMode": "area",
         "justifyMode": "auto",
-        "orientation": "auto",
+        "orientation": "horizontal",
         "percentChangeColorMode": "standard",
         "reduceOptions": {
           "calcs": [
@@ -228,6 +229,7 @@
         "wideLayout": true
       },
       "pluginVersion": "12.3.0",
+      "repeatDirection": "h",
       "targets": [
         {
           "editorMode": "code",
@@ -329,8 +331,8 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "ghms_server_ping_latency_ms",
-          "legendFormat": "{{instance_id}}",
+          "expr": "ghms_server_ping_latency_ms * on(instance_id) group_left(name) ghms_instance_info",
+          "legendFormat": "{{name}}",
           "range": true,
           "refId": "A"
         }
@@ -809,5 +811,5 @@
   "timezone": "browser",
   "title": "GHMS",
   "uid": "adgk9fc",
-  "version": 3
+  "version": 5
 }
