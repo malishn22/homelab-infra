@@ -39,77 +39,6 @@
         "type": "prometheus",
         "uid": "prometheus-homelab"
       },
-      "description": "Time since the latest sync run started. Grows unbounded if the scheduler stops running. Needs the archiver to record sync_runs rows.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              },
-              {
-                "color": "yellow",
-                "value": 216000
-              },
-              {
-                "color": "red",
-                "value": 259200
-              }
-            ]
-          },
-          "unit": "dtdhms"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 4,
-        "x": 0,
-        "y": 1
-      },
-      "id": 2,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "percentChangeColorMode": "standard",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "12.3.0",
-      "targets": [
-        {
-          "editorMode": "code",
-          "expr": "time() - spotify_archiver_last_run_timestamp_seconds",
-          "instant": true,
-          "legendFormat": "__auto",
-          "range": false,
-          "refId": "A"
-        }
-      ],
-      "title": "Last run age",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus-homelab"
-      },
       "description": "Time since the latest completed run finished.",
       "fieldConfig": {
         "defaults": {
@@ -141,7 +70,7 @@
       "gridPos": {
         "h": 4,
         "w": 4,
-        "x": 4,
+        "x": 0,
         "y": 1
       },
       "id": 3,
@@ -181,7 +110,7 @@
         "type": "prometheus",
         "uid": "prometheus-homelab"
       },
-      "description": "Time since the most recent content-row change in the DB (playlists/tracks/artists). Works today.",
+      "description": "Wall-clock duration of the most recent sync run.",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -194,14 +123,6 @@
               {
                 "color": "green",
                 "value": 0
-              },
-              {
-                "color": "yellow",
-                "value": 216000
-              },
-              {
-                "color": "red",
-                "value": 259200
               }
             ]
           },
@@ -212,10 +133,10 @@
       "gridPos": {
         "h": 4,
         "w": 4,
-        "x": 8,
+        "x": 4,
         "y": 1
       },
-      "id": 4,
+      "id": 100,
       "options": {
         "colorMode": "value",
         "graphMode": "none",
@@ -237,14 +158,14 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "time() - spotify_archiver_db_last_updated_seconds",
+          "expr": "spotify_archiver_last_run_duration_seconds",
           "instant": true,
           "legendFormat": "__auto",
           "range": false,
           "refId": "A"
         }
       ],
-      "title": "DB last-updated age",
+      "title": "Last run duration",
       "type": "stat"
     },
     {
@@ -294,7 +215,7 @@
       "gridPos": {
         "h": 4,
         "w": 4,
-        "x": 12,
+        "x": 8,
         "y": 1
       },
       "id": 5,
@@ -376,7 +297,7 @@
       "gridPos": {
         "h": 4,
         "w": 4,
-        "x": 16,
+        "x": 12,
         "y": 1
       },
       "id": 6,
@@ -442,7 +363,7 @@
       "gridPos": {
         "h": 4,
         "w": 4,
-        "x": 20,
+        "x": 16,
         "y": 1
       },
       "id": 7,
@@ -1180,5 +1101,5 @@
   "timezone": "browser",
   "title": "Spotify Archiver",
   "uid": "spotify-archiver",
-  "version": 5
+  "version": 6
 }
