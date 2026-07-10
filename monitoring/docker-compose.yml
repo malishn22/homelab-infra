@@ -54,9 +54,59 @@ services:
       - homelab
     restart: unless-stopped
 
+  # Per-container CPU/mem/liveness metrics. Scraped over the homelab network as
+  # cadvisor:8080 (host 8080 is taken by calimali, so no port is published).
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor
+    restart: unless-stopped
+    privileged: true
+    devices:
+      - /dev/kmsg
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      - /dev/disk/:/dev/disk:ro
+    networks:
+      - homelab
+
+  # Log store for container stdout. Reachable in-network as loki:3100
+  # (Grafana datasource + Promtail push); no host port published.
+  loki:
+    image: grafana/loki:latest
+    container_name: loki
+    restart: unless-stopped
+    command: -config.file=/etc/loki/loki-config.yml
+    volumes:
+      - ./loki/loki-config.yml:/etc/loki/loki-config.yml:ro
+      - loki-data:/loki
+    networks:
+      - homelab
+
+  # Discovers all containers via the Docker API and ships their stdout to Loki.
+  # user: root so it can read the root:docker-owned docker.sock.
+  promtail:
+    image: grafana/promtail:latest
+    container_name: promtail
+    restart: unless-stopped
+    user: root
+    command: -config.file=/etc/promtail/promtail-config.yml
+    volumes:
+      - ./promtail/promtail-config.yml:/etc/promtail/promtail-config.yml:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - promtail-positions:/tmp
+    depends_on:
+      - loki
+    networks:
+      - homelab
+
 volumes:
   prometheus-data:
   grafana_storage: {}
+  loki-data: {}
+  promtail-positions: {}
 
 networks:
   homelab:
