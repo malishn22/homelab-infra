@@ -1,0 +1,24 @@
+services:
+  jellyfin:
+    container_name: "${JF_CONTAINER_NAME:-jellyfin}"
+    image: jellyfin/jellyfin:latest
+    ports:
+      - "${JF_HOST_PORT:-8096}:8096"
+    volumes:
+      - "${JF_CONFIG_DIR:-./config}:/config"
+      - "${JF_CACHE_DIR:-./cache}:/cache"
+      - "${JF_MEDIA_DIR:-/home/mali/media}:/media:ro"
+    environment:
+      JELLYFIN_PublishedServerUrl: "${JF_PUBLISHED_URL:-https://malihome.jellyfin}"
+    devices:
+      - /dev/dri:/dev/dri
+    group_add:
+      - "992"
+      - "44"
+    restart: unless-stopped
+    networks:
+      - homelab
+
+networks:
+  homelab:
+    external: true

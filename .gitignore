@@ -11,3 +11,7 @@ monitoring/node_exporter/
 
 # Nginx
 nginx/certs/
+
+# Jellyfin
+jellyfin/config/
+jellyfin/cache/
