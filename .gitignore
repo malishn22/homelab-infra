@@ -11,7 +11,15 @@ monitoring/node_exporter/
 
 # Nginx
 nginx/certs/
+# Rendered from templates/*.template at container start — hold the real public hostnames.
+nginx/conf.d/calimali-api.conf
+nginx/conf.d/jellyfin.conf
 
 # Jellyfin
 jellyfin/config/
 jellyfin/cache/
+# Cron prune-run record (host-specific paths/disk figures) — keep local, don't publish
+scripts/docker-cleanup.log
+
+# Graphify generated output
+graphify-out/
