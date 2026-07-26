@@ -1,12 +1,16 @@
+# Rendered to conf.d/jellyfin.conf at container start (nginx image envsubst). The LAN
+# hostname comes from JELLYFIN_SERVER_NAME in .env; the rendered conf.d file is gitignored,
+# so the real value is never committed. Only ${JELLYFIN_SERVER_NAME} is substituted —
+# nginx's own $host/$scheme/$http_upgrade/etc. are left intact by NGINX_ENVSUBST_FILTER.
 server {
     listen 80;
-    server_name malihome.jellyfin;
+    server_name ${JELLYFIN_SERVER_NAME};
     return 301 https://$host$request_uri;
 }
 
 server {
     listen 443 ssl;
-    server_name malihome.jellyfin;
+    server_name ${JELLYFIN_SERVER_NAME};
 
     ssl_certificate     /etc/nginx/certs/home.local.crt;
     ssl_certificate_key /etc/nginx/certs/home.local.key;
