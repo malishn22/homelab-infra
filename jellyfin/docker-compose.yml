@@ -7,9 +7,9 @@ services:
     volumes:
       - "${JF_CONFIG_DIR:-./config}:/config"
       - "${JF_CACHE_DIR:-./cache}:/cache"
-      - "${JF_MEDIA_DIR:-/home/mali/media}:/media:ro"
+      - "${JF_MEDIA_DIR:-/srv/media}:/media:ro"
     environment:
-      JELLYFIN_PublishedServerUrl: "${JF_PUBLISHED_URL:-https://malihome.jellyfin}"
+      JELLYFIN_PublishedServerUrl: "${JF_PUBLISHED_URL:-https://media.example.lan}"
     devices:
       - /dev/dri:/dev/dri
     group_add:

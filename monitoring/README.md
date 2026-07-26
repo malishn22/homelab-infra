@@ -36,6 +36,36 @@ The GHMS (Minecraft manager) backend exposes app-level metrics at `/metrics`
 
 ---
 
+### **cAdvisor**
+Exposes per-container resource metrics (CPU, memory, filesystem, network) for everything running
+on the host, so container-level usage can be separated from host-level usage.
+
+- Reads the Docker socket and `/` (read-only) to discover containers.
+- Scraped internally; no host port published.
+
+---
+
+### **Loki + Promtail**
+The log half of the stack, alongside the metrics half.
+
+- **Promtail** tails container logs on the host and ships them to Loki.
+- **Loki** indexes them by label and is queried from Grafana as a second datasource, so a spike on
+  a metrics dashboard can be pivoted straight to the logs from that moment.
+- Both are scraped/served internally; neither publishes a host port.
+
+---
+
+### **Spotify Archiver**
+The archiver's web backend exposes app-level metrics (sync runs, run status, durations).
+
+- Scraped over the `homelab` network as job `spotify-archiver`, target `backend:8000`.
+- Dashboard: `grafana/dashboards/spotify-archiver.json`.
+
+> ⚠️ That target is the literal container name `backend`, which is generic. Do not name another
+> container `backend` on the `homelab` network or Prometheus will scrape the wrong one.
+
+---
+
 ### **Grafana**
 Visualizes data coming from Prometheus.
 
@@ -54,14 +84,20 @@ Visualizes data coming from Prometheus.
 monitoring/
 ├─ prometheus/
 │  └─ prometheus.yml           # Prometheus scrape config
+├─ loki/
+│  └─ loki-config.yml          # Loki storage + retention config
+├─ promtail/
+│  └─ promtail-config.yml      # Which container logs to tail and how to label them
 ├─ grafana/
 │  ├─ provisioning/
-│  │  ├─ datasources/          # Auto-registered Prometheus datasource
+│  │  ├─ datasources/          # Auto-registered Prometheus + Loki datasources
 │  │  └─ dashboards/           # Dashboard provider config
 │  └─ dashboards/
-│     └─ ghms.json             # GHMS dashboard definition
+│     ├─ ghms.json             # GHMS dashboard definition
+│     └─ spotify-archiver.json # Spotify Archiver sync-health dashboard
 ├─ .env.example                # Grafana admin vars (copy to .env)
-└─ docker-compose.yml          # Prometheus, Grafana, Node Exporter, Nginx Exporter
+└─ docker-compose.yml          # Prometheus, Grafana, Node Exporter, Nginx Exporter,
+                               # cAdvisor, Loki, Promtail
 ```
 
 ---
@@ -80,6 +116,9 @@ This will start:
 - Grafana  
 - Node Exporter  
 - Nginx Prometheus Exporter  
+- cAdvisor  
+- Loki  
+- Promtail  
 
 They all join the `homelab` Docker network automatically.
 
@@ -93,6 +132,9 @@ They all join the `homelab` Docker network automatically.
 | Grafana           | `http://<TARGET_IP>:3000`           |
 | Node Exporter     | Scraped internally only             |
 | Nginx Exporter    | Scraped internally only             |
+| cAdvisor          | Scraped internally only             |
+| Loki              | Queried by Grafana only             |
+| Promtail          | No UI — ships logs to Loki          |
 
 ---
 
@@ -132,3 +174,9 @@ stick:
   provisioned dashboards are marked non-editable in place.
 - Copy `.env.example` to `.env` and set a Grafana admin password before first
   run; compose will refuse to start without `GF_SECURITY_ADMIN_PASSWORD`.
+- **Prometheus retention is capped deliberately.** The retention flags are enforced against data
+  that already exists, not just future growth, and the stricter of time/size wins — so lowering
+  either below current usage deletes the oldest blocks on the next start. Doing this once cost
+  ~15 days of metrics. Snapshot `monitoring_prometheus-data` before changing them.
+- `prometheus-data`, `grafana_storage`, and `loki-data` are **named** volumes, so they live under
+  `/var/lib/docker` on a 12 G LVM volume. This stack is the usual reason `/var` fills.

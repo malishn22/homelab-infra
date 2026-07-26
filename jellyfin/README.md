@@ -16,24 +16,24 @@ docker compose up -d
 Then on your **client** machine, add this to `/etc/hosts`:
 
 ```
-192.168.1.15    malihome.jellyfin
+192.0.2.10    media.example.lan
 ```
 
-and open <https://malihome.jellyfin>.
+and open <https://media.example.lan>.
 
 > The shared cert is issued for `home.local`, so the browser will warn about a name
 > mismatch on first visit — same as `bookmark.home` and `minecraft.home`. Accept and continue.
 
 ## Media libraries
 
-Media lives at `/home/mali/media` on the host and is mounted **read-only** at `/media`.
+Media lives at `/srv/media` on the host and is mounted **read-only** at `/media`.
 Add each folder as its own library in the setup wizard — paths are case-sensitive:
 
 | Host path                  | In container     | Library type |
 | -------------------------- | ---------------- | ------------ |
-| `/home/mali/media/movie`   | `/media/movie`   | Movies       |
-| `/home/mali/media/tv`      | `/media/tv`      | Shows        |
-| `/home/mali/media/anime`   | `/media/anime`   | Shows        |
+| `/srv/media/movie`   | `/media/movie`   | Movies       |
+| `/srv/media/tv`      | `/media/tv`      | Shows        |
+| `/srv/media/anime`   | `/media/anime`   | Animes       |
 
 Media sits outside this repo on purpose, so bulk files can never be committed by accident.
 
