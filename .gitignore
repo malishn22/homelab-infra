@@ -16,6 +16,9 @@ monitoring/node_exporter/
 # Alertmanager — the Discord webhook URL is a live credential.
 # alertmanager.yml points at it via webhook_url_file, so the config itself is safe to commit.
 monitoring/alertmanager/discord_url
+# Your name + Discord id. Not credentials, but this repo is public and past commits
+# deliberately scrubbed identifying details. The committed .example carries the shape.
+monitoring/alertmanager/templates/discord.tmpl
 
 # Nginx
 nginx/certs/

@@ -1,0 +1,14 @@
+{{/*
+  Copy to  discord.tmpl  (drop the .example) and fill in the two values.
+  discord.tmpl is gitignored — this repo is public.
+*/}}
+
+{{/* What the alert greets you as, e.g. Mali */}}
+{{ define "discord.name" }}YOUR_NAME{{ end }}
+
+{{/*
+  Your numeric Discord user id — just the digits, nothing around them.
+  Get it: Settings > Advanced > Developer Mode on,
+          then right-click your name > Copy User ID.
+*/}}
+{{ define "discord.mention" }}123456789012345678{{ end }}

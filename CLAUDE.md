@@ -69,6 +69,14 @@ and a containerised `nginx -t`.
   boots, listens, and looks healthy; the file is only read when a notification is sent. So a
   dead notification path is invisible until the first real alert. Prove it with the synthetic
   `POST /api/v2/alerts` test in `monitoring/README.md`, never by looking at container health.
+- **Testing alerts: change the `alertname` each time.** Alertmanager dedups by label set, so
+  re-sending identical labels is the same alert still firing and stays quiet until
+  `repeat_interval` (12h for warning). And it logs nothing on success — only failures — so an
+  empty log plus no Discord message looks identical to a broken pipeline. Read
+  `alertmanager_notifications_total` / `_failed_total` instead of the log.
+- **A Discord mention is `<@` + numeric id + `>`.** A username does not work; Discord resolves
+  mentions by id only and renders anything else as plain text, pinging nobody. The brackets are
+  applied in `alertmanager.yml`, so `templates/discord.tmpl` holds only the bare digits.
 - **Discord is DNS-blocked by the ISP**, so the alertmanager service carries
   `dns: [8.8.8.8, 8.8.4.4]`. Do not "tidy that away" — without it `discord.com` resolves to a
   block page serving a self-signed cert and every notification fails with

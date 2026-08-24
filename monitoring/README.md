@@ -191,8 +191,24 @@ running service and needs no rule to fire:
 docker exec prometheus wget -qO- --header='Content-Type: application/json' --post-data='[{"labels":{"alertname":"TestAlert","severity":"warning"},"annotations":{"summary":"Synthetic alert - delivery test, safe to ignore"}}]' http://alertmanager:9093/api/v2/alerts && echo sent
 ```
 
-It should appear in the Discord channel within ~30s (`group_wait`). If it does not, check
-`docker logs alertmanager` for a notification error.
+It should appear in the Discord channel within ~30s (`group_wait`).
+
+**Use a different `alertname` every time you test.** Alertmanager deduplicates by label set: a
+re-POST with identical labels is the *same* alert still firing, not a new one, so it will not
+notify again until `repeat_interval` — 12h for `warning`. Re-POSTing also pushes `endsAt`
+forward, so the alert never resolves and never re-fires either. It looks exactly like a broken
+notification path.
+
+**An empty log means success, not silence.** Alertmanager only logs failures and retries, never
+successful notifications. To check whether anything was actually delivered, read the counters
+instead:
+
+```bash
+docker exec prometheus wget -qO- http://alertmanager:9093/metrics | grep -E 'alertmanager_notifications_(total|failed_total)\{integration="discord"'
+```
+
+`notifications_total` up and `failed_total` at zero means it sent. If `failed_total` is
+non-zero, then `docker logs alertmanager` will have the reason.
 
 ### **Alert rules**
 Rules are **YAML in git**, exactly like dashboards — the running config is never the source of

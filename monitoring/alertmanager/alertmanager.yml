@@ -24,6 +24,12 @@ global:
   # generous headroom.
   resolve_timeout: 5m
 
+# Your name and Discord id, kept out of this public repo. Copy
+# templates/discord.tmpl.example to templates/discord.tmpl and fill it in —
+# REQUIRED, same as discord_url. The .example is not matched by *.tmpl.
+templates:
+  - '/etc/alertmanager/templates/*.tmpl'
+
 route:
   receiver: discord
   # Group by the alert and the job it came from, so a single exporter dying does
@@ -53,6 +59,18 @@ receivers:
         # Send the "resolved" message too — otherwise a fixed problem stays
         # visually unresolved in the channel and trains you to distrust it.
         send_resolved: true
+        # The @-mention goes in `content` — Discord only notifies for a mention in the
+        # message body, not for one inside an embed.
+        #
+        # The <@ > wrapper is Discord's own mention format and lives here, not in
+        # templates/discord.tmpl, so that file only ever holds the bare numeric id.
+        content: '<@{{ template "discord.mention" . }}>'
+        # The greeting goes inside the embed. discord.default.message is
+        # Alertmanager's built-in body; composing with it keeps the standard
+        # firing/resolved formatting instead of reinventing it.
+        message: |-
+          Heyo {{ template "discord.name" . }}
+          {{ template "discord.default.message" . }}
 
 inhibit_rules:
   # If something is already critical, do not also send the warning-level alert
