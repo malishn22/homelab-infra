@@ -132,6 +132,22 @@ services:
     image: prom/alertmanager:latest
     container_name: alertmanager
     restart: unless-stopped
+    # Discord is DNS-blocked by the ISP on this connection: the default resolver returns
+    # 195.175.254.2 (a block page) for discord.com, which serves a self-signed cert for
+    # CN=localhost.localdomain. Alertmanager then fails the notification with
+    # "x509: certificate is not valid for any names" — while still looking perfectly
+    # healthy, because it only touches the webhook when an alert fires.
+    #
+    # The block is DNS-only: resolved through Google DNS the real Cloudflare addresses
+    # come back with a valid CN=discord.com certificate. Overriding the resolver for
+    # THIS CONTAINER ONLY is the narrowest fix — nothing else here talks to Discord, and
+    # the host keeps using Tailscale MagicDNS (100.100.100.100) as before.
+    #
+    # Container-name resolution is unaffected: on a user-defined network Docker keeps its
+    # embedded resolver at 127.0.0.11 and uses these only as upstream forwarders.
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     command:
       - '--config.file=/etc/alertmanager/alertmanager.yml'
       - '--storage.path=/alertmanager'

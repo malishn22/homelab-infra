@@ -69,6 +69,11 @@ and a containerised `nginx -t`.
   boots, listens, and looks healthy; the file is only read when a notification is sent. So a
   dead notification path is invisible until the first real alert. Prove it with the synthetic
   `POST /api/v2/alerts` test in `monitoring/README.md`, never by looking at container health.
+- **Discord is DNS-blocked by the ISP**, so the alertmanager service carries
+  `dns: [8.8.8.8, 8.8.4.4]`. Do not "tidy that away" — without it `discord.com` resolves to a
+  block page serving a self-signed cert and every notification fails with
+  `x509: certificate is not valid for any names`, while the container still looks healthy. The
+  block is DNS-only; the override is deliberately scoped to that one container.
 - **Never do a full-file Write on `monitoring/docker-compose.yml`** — the `PreToolUse` retention
   guard denies any write whose new text contains `storage.tsdb.retention`, and that string is
   already in the prometheus `command:` block. Use narrow Edits anchored elsewhere in the file.

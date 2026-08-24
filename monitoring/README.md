@@ -167,6 +167,23 @@ so the secret is supplied with `webhook_url_file` rather than being written into
 > first real alert fires — the worst possible moment to find out. Do not trust a green
 > container; run the delivery test below.
 
+> ⚠️ **Discord is DNS-blocked by the ISP on this connection**, so the Alertmanager container
+> runs with `dns: [8.8.8.8, 8.8.4.4]` in `docker-compose.yml`. Without it the default resolver
+> returns `195.175.254.2` (a block page) for `discord.com`, which serves a self-signed
+> certificate for `CN=localhost.localdomain`, and Alertmanager correctly refuses to send the
+> webhook token to it:
+>
+> ```
+> tls: failed to verify certificate: x509: certificate is not valid for any names,
+> but wanted to match discord.com
+> ```
+>
+> The block is DNS-only — resolved through Google DNS the real Cloudflare addresses come back
+> with a valid `CN=discord.com` certificate. The override is scoped to that one container:
+> nothing else here talks to Discord, and the host keeps using Tailscale MagicDNS. Container
+> name resolution is unaffected, because Docker keeps its embedded resolver at `127.0.0.11` on
+> user-defined networks and treats these only as upstream forwarders.
+
 **Prove delivery** by pushing a synthetic alert straight into Alertmanager. This touches no
 running service and needs no rule to fire:
 
