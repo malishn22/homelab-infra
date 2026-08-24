@@ -78,6 +78,10 @@ Every one of these was hit while building the infra dashboards. Full detail in
   *running* GHMS game server. Usage is expressed as a percentage of the host (16 cores / 29.2 GB).
 - `node_filesystem_*` reports three phantom `/etc/*` mounts (Docker's own bind mounts inside the
   exporter); `nvme0n1` and `dm-*` double-count the same I/O and must never be summed together.
+- **`nginx_http_requests_total` counts the exporter's own polls** — roughly 4/min on a completely
+  idle proxy. `stub_status` sets `access_log off`, so those polls never reach the access log;
+  the Edge dashboard derives request rate and status codes from Loki instead. stub_status has no
+  status codes or latency at all, so anything RED-shaped has to come from the log.
 - **`count(up == 0)` returns no series when everything is healthy**, which a stat panel renders as
   "No data" — precisely the ambiguity a scrape-health tile exists to remove. Use
   `min(up{job=~"..."})`, which always returns a value, or append `or vector(0)`. Every dashboard

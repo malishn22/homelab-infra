@@ -117,6 +117,27 @@ The archiver's web backend exposes app-level metrics (sync runs, run status, dur
 
 ---
 
+### **Nginx Prometheus Exporter**
+Scrapes nginx's `stub_status` endpoint (exposed on an internal-only server block) as job `nginx`.
+
+Dashboard: `grafana/dashboards/nginx.json` — **Edge (nginx)**.
+
+Two things shape that dashboard:
+
+- **stub_status is thin.** It is nginx's free status module and exposes nine numbers: `nginx_up`,
+  a request counter, and six connection gauges. No status codes, no latency, no per-vhost
+  breakdown. Everything richer on the Edge dashboard is parsed out of the access log through
+  Loki with a `pattern` parser, because nginx logs to `/dev/stdout` and Promtail already
+  collects it.
+- **`nginx_http_requests_total` is not real traffic.** The exporter polls `stub_status` on every
+  Prometheus scrape, and each poll is itself a request — about 4/min forever, so an idle proxy
+  still reports ~0.07 req/s. The `stub_status` location sets `access_log off`, so those polls
+  never reach the log; the log is therefore the honest source for request rate and the dashboard
+  uses it. The counter is left alone.
+
+The Edge dashboard defaults to a **7-day** range rather than the usual 6 hours, because this
+proxy serves bursts and is idle in between — a 6h window shows an empty dashboard on most days.
+
 ### **Health signals**
 Three signals exist on every relevant dashboard specifically because their absence is
 indistinguishable from good news:
