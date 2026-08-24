@@ -16,3 +16,17 @@ datasources:
     url: http://loki:3100
     isDefault: false
     editable: false
+
+  # Gives Grafana a UI for firing alerts and silences without publishing a host
+  # port for Alertmanager. implementation must be 'prometheus' — that selects the
+  # upstream Alertmanager API dialect rather than Grafana's own built-in alerting.
+  - name: Alertmanager
+    uid: alertmanager-homelab
+    type: alertmanager
+    access: proxy
+    url: http://alertmanager:9093
+    isDefault: false
+    editable: false
+    jsonData:
+      implementation: prometheus
+      handleGrafanaManagedAlerts: false

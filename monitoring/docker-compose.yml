@@ -9,6 +9,9 @@ services:
       - '--storage.tsdb.retention.size=2GB'
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      # Alert rules. prometheus.yml mounts as a single FILE, so this directory needs its
+      # own mount or rule_files resolves to a path that does not exist in the container.
+      - ./prometheus/rules:/etc/prometheus/rules:ro
       - prometheus-data:/prometheus
     ports:
       - "9091:9090"
@@ -86,6 +89,9 @@ services:
     command: -config.file=/etc/loki/loki-config.yml
     volumes:
       - ./loki/loki-config.yml:/etc/loki/loki-config.yml:ro
+      # Log alert rules. Must contain a per-tenant subdirectory: auth_enabled is false,
+      # so Loki looks in rules/fake/ and silently ignores anything at the top level.
+      - ./loki/rules:/etc/loki/rules:ro
       - loki-data:/loki
     networks:
       - homelab
@@ -107,11 +113,46 @@ services:
     networks:
       - homelab
 
+  # Routes firing alerts from BOTH rule sources (Prometheus metrics, Loki logs) to a
+  # single Discord webhook. Reached in-network as alertmanager:9093; no host port is
+  # published, following the cAdvisor/Loki precedent — two systems allocate host ports
+  # on this box independently, and publishing nothing sidesteps that entirely.
+  #
+  # The Discord webhook URL is NOT in alertmanager.yml. Alertmanager does not expand
+  # env vars in its config, so it reads the secret from ./alertmanager/discord_url
+  # (gitignored) via webhook_url_file.
+  #
+  # WARNING, verified against 0.34.0: a missing discord_url does NOT stop Alertmanager
+  # booting. It starts, listens, and looks perfectly healthy — the file is only read
+  # when a notification is actually sent, so the failure surfaces the first time an
+  # alert fires and nobody sees it. Copy discord_url.example to discord_url with the
+  # real webhook BEFORE `up`, then prove delivery with the synthetic-alert test in
+  # README.md. Do not assume it works because the container is green.
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: alertmanager
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+    volumes:
+      # The whole directory, deliberately, not the two files individually. Docker's
+      # bind mounts create a missing source as a DIRECTORY, so mounting ./alertmanager
+      # /discord_url directly would silently produce a directory named discord_url on a
+      # first run and Alertmanager would fail with "is a directory" — confusing, and it
+      # persists until you delete it. Mounting the parent means a missing secret fails
+      # cleanly with "no such file".
+      - ./alertmanager:/etc/alertmanager:ro
+      - alertmanager-data:/alertmanager
+    networks:
+      - homelab
+
 volumes:
   prometheus-data:
   grafana_storage: {}
   loki-data: {}
   promtail-positions: {}
+  alertmanager-data: {}
 
 networks:
   homelab:

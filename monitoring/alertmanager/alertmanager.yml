@@ -1,0 +1,64 @@
+# Alertmanager routing for the homelab host.
+#
+# Both rule sources converge here: Prometheus evaluates the metric rules in
+# prometheus/rules/, Loki's ruler evaluates the log rules in loki/rules/fake/,
+# and both push to this one Alertmanager so there is a single notification path.
+#
+# The Discord webhook URL is NOT in this file. Alertmanager does not expand
+# environment variables in its YAML, so the secret is supplied through
+# webhook_url_file, pointing at a gitignored file created by hand.
+#
+# WARNING (verified against Alertmanager 0.34.0): a missing discord_url does NOT
+# prevent startup. Alertmanager boots, listens on 9093 and looks entirely healthy;
+# the file is read only when a notification is sent. So a broken notification path
+# stays invisible until the first real alert — which is the worst possible moment
+# to discover it. Prove delivery with the synthetic-alert test in README.md instead
+# of trusting a green container.
+#
+# Check with:
+#   docker run --rm -v "$PWD:/cfg" prom/alertmanager:latest amtool check-config /cfg/alertmanager.yml
+
+global:
+  # How long after the last firing evaluation an alert is considered resolved.
+  # Prometheus re-sends firing alerts every evaluation_interval (15s), so 5m is
+  # generous headroom.
+  resolve_timeout: 5m
+
+route:
+  receiver: discord
+  # Group by the alert and the job it came from, so a single exporter dying does
+  # not fan out into one Discord message per series.
+  group_by: ['alertname', 'job']
+  # Wait this long for other alerts in the same group before sending the first
+  # notification — turns a burst into one message.
+  group_wait: 30s
+  # Wait this long before notifying about NEW alerts added to an existing group.
+  group_interval: 5m
+  # How long before an unresolved alert is repeated. 12h is deliberately long:
+  # a homelab alert that is still true tomorrow does not need hourly nagging.
+  repeat_interval: 12h
+
+  routes:
+    # Critical alerts repeat more often, because they mean something is actually
+    # down rather than trending badly.
+    - matchers:
+        - severity="critical"
+      receiver: discord
+      repeat_interval: 2h
+
+receivers:
+  - name: discord
+    discord_configs:
+      - webhook_url_file: /etc/alertmanager/discord_url
+        # Send the "resolved" message too — otherwise a fixed problem stays
+        # visually unresolved in the channel and trains you to distrust it.
+        send_resolved: true
+
+inhibit_rules:
+  # If something is already critical, do not also send the warning-level alert
+  # for the same thing on the same instance.
+  - source_matchers:
+      - severity="critical"
+    target_matchers:
+      - severity="warning"
+    equal: ['alertname', 'instance']

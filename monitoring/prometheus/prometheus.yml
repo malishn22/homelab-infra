@@ -7,9 +7,14 @@ global:
 alerting:
   alertmanagers:
     - static_configs:
-        - targets: []
+        - targets: ["alertmanager:9093"]
 
-rule_files: []
+# Loaded from a directory mounted separately in docker-compose.yml — prometheus.yml
+# itself is a single-file mount, so this path would not exist without it.
+# A glob matching zero files is tolerated silently; a MALFORMED rule file makes
+# Prometheus refuse to start. Always run `promtool check rules` before restarting.
+rule_files:
+  - "/etc/prometheus/rules/*.yml"
 
 scrape_configs:
   - job_name: "prometheus"
@@ -48,3 +53,12 @@ scrape_configs:
       - targets: ["cadvisor:8080"]
         labels:
           app: "cadvisor"
+
+  # Scraping Alertmanager means the TargetDown rule covers the alerting path itself.
+  # It cannot notify about its own death — nothing can, on a single host — but the
+  # Grafana UI and the Alertmanager datasource will show it.
+  - job_name: "alertmanager"
+    static_configs:
+      - targets: ["alertmanager:9093"]
+        labels:
+          app: "alertmanager"

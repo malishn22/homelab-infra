@@ -138,11 +138,79 @@ Two things shape that dashboard:
 The Edge dashboard defaults to a **7-day** range rather than the usual 6 hours, because this
 proxy serves bursts and is idle in between — a 6h window shows an empty dashboard on most days.
 
+### **Alertmanager**
+Routes firing alerts to Discord. Scraped as job `alertmanager`; reachable in-network as
+`alertmanager:9093` with **no host port published**, following the cAdvisor/Loki precedent.
+
+Both rule sources converge on it, so there is one notification path rather than two:
+
+```text
+Prometheus  ──(metric rules: prometheus/rules/*.yml)──┐
+                                                      ├──>  Alertmanager  ──>  Discord
+Loki ruler  ──(log rules:    loki/rules/fake/*.yml)───┘
+```
+
+**Setup — required before the first `docker compose up -d`:**
+
+```bash
+cp alertmanager/discord_url.example alertmanager/discord_url
+# then edit alertmanager/discord_url and paste your real Discord webhook URL
+```
+
+`discord_url` is gitignored. Alertmanager does not expand environment variables in its YAML,
+so the secret is supplied with `webhook_url_file` rather than being written into
+`alertmanager.yml` — which means the config itself is safe to commit.
+
+> ⚠️ **A missing `discord_url` does not stop Alertmanager starting.** Verified against 0.34.0:
+> it boots, listens on 9093 and looks completely healthy, because the file is only read when a
+> notification is actually sent. A broken notification path therefore stays invisible until the
+> first real alert fires — the worst possible moment to find out. Do not trust a green
+> container; run the delivery test below.
+
+**Prove delivery** by pushing a synthetic alert straight into Alertmanager. This touches no
+running service and needs no rule to fire:
+
+```bash
+docker exec prometheus wget -qO- --header='Content-Type: application/json' --post-data='[{"labels":{"alertname":"TestAlert","severity":"warning"},"annotations":{"summary":"Synthetic alert - delivery test, safe to ignore"}}]' http://alertmanager:9093/api/v2/alerts && echo sent
+```
+
+It should appear in the Discord channel within ~30s (`group_wait`). If it does not, check
+`docker logs alertmanager` for a notification error.
+
+### **Alert rules**
+Rules are **YAML in git**, exactly like dashboards — the running config is never the source of
+truth.
+
+| Rule | Source | Fires when |
+|---|---|---|
+| `TargetDown` | Prometheus | any scrape target down 5m — you have gone blind |
+| `NginxDown` | Prometheus | `nginx_up == 0` for 5m — every hosted service is behind it |
+| `ContainerOOMKilled` | Prometheus | any OOM kill in 10m (`for: 0m`, it is a past event) |
+| `ContainerCrashLooping` | Prometheus | >2 restarts of the same container in 15m |
+| `VarFillingUp` | Prometheus | `/var` above 85% for 15m — the incident that already happened |
+| `HostMemoryPressure` | Prometheus | MemAvailable-based usage above 90% for 10m |
+| `NginxServerErrors` | **Loki** | >5 5xx in 5m — stub_status has no status codes, so this must come from logs |
+| `NginxErrorLogActivity` | **Loki** | >5 error-log lines in 10m |
+
+Thresholds were set against measured behaviour, not guessed: over 7 days nginx served 46,168
+requests with **zero** 5xx, and the error log produced 4 lines total.
+
+Validate before restarting — a malformed rule file makes Prometheus refuse to start:
+
+```bash
+./prometheus/promtool check rules prometheus/rules/*.yml
+```
+
+> ⚠️ **Loki rules need a per-tenant subdirectory.** `auth_enabled` is `false`, so the tenant is
+> the literal string `fake` and rules must live at `loki/rules/fake/*.yml`. A file one level up
+> is ignored with no error logged. Confirm the ruler actually loaded them:
+> `docker exec grafana curl -s http://loki:3100/loki/api/v1/rules`
+
 ### **Health signals**
 Three signals exist on every relevant dashboard specifically because their absence is
 indistinguishable from good news:
 
-- **`Scrape health`** (all five dashboards) — `min(up{job=~"..."})`, scoped to the jobs that
+- **`Scrape health`** (all six dashboards) — `min(up{job=~"..."})`, scoped to the jobs that
   dashboard actually queries. If an exporter dies, every panel below goes flat and empty, which
   reads as "nothing is happening" rather than "I have stopped being able to see". `NO DATA` on
   this tile means Grafana cannot reach Prometheus at all.
@@ -156,7 +224,7 @@ indistinguishable from good news:
 
 ### **Grafana**
 Visualizes data coming from Prometheus and Loki. Datasources and dashboards are both provisioned
-from files — see the folder tree below for the four dashboards and `Updating a Dashboard` for how
+from files — see the folder tree below for the six dashboards and `Updating a Dashboard` for how
 to change one.
 
 - Accessible in browser on port `3000` by default.
@@ -173,9 +241,14 @@ to change one.
 ```text
 monitoring/
 ├─ prometheus/
-│  └─ prometheus.yml           # Prometheus scrape config
+│  ├─ prometheus.yml
+│  └─ rules/                   # Metric alert rules (promtool check rules)           # Prometheus scrape config
 ├─ loki/
-│  └─ loki-config.yml          # Loki storage + retention config
+│  ├─ loki-config.yml
+│  └─ rules/fake/              # Log alert rules — 'fake' is the tenant id, required          # Loki storage + retention config
+├─ alertmanager/
+│  ├─ alertmanager.yml         # Routing + Discord receiver
+│  └─ discord_url.example      # Copy to discord_url (gitignored) with the real webhook
 ├─ promtail/
 │  └─ promtail-config.yml      # Which container logs to tail and how to label them
 ├─ grafana/
@@ -190,7 +263,7 @@ monitoring/
 │     └─ system-ci.json        # Non-container load: systemd slices, CI runners, bridges
 ├─ .env.example                # Grafana admin vars (copy to .env)
 └─ docker-compose.yml          # Prometheus, Grafana, Node Exporter, Nginx Exporter,
-                               # cAdvisor, Loki, Promtail
+                               # cAdvisor, Loki, Promtail, Alertmanager
 ```
 
 ---
@@ -272,4 +345,4 @@ stick:
   either below current usage deletes the oldest blocks on the next start. Doing this once cost
   ~15 days of metrics. Snapshot `monitoring_prometheus-data` before changing them.
 - `prometheus-data`, `grafana_storage`, and `loki-data` are **named** volumes, so they live under
-  `/var/lib/docker` on a 12 G LVM volume. This stack is the usual reason `/var` fills.
+  `/var/lib/docker` on a 27 G LVM volume (12 G until 2026-07-22). This stack is the usual reason `/var` fills.

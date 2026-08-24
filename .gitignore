@@ -7,7 +7,15 @@ linkding/.env
 monitoring/prometheus/*
 !monitoring/prometheus/
 !monitoring/prometheus/prometheus.yml
+# Alerting rules are source, not data — without these negations the blanket
+# ignore above would silently leave a fresh clone with no alerts at all.
+!monitoring/prometheus/rules/
+!monitoring/prometheus/rules/*.yml
 monitoring/node_exporter/
+
+# Alertmanager — the Discord webhook URL is a live credential.
+# alertmanager.yml points at it via webhook_url_file, so the config itself is safe to commit.
+monitoring/alertmanager/discord_url
 
 # Nginx
 nginx/certs/

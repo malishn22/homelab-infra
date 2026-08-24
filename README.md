@@ -17,6 +17,7 @@ I’m using this project both as my real environment I rely on and as a playgrou
 - **Containerization:** Docker + Docker Compose
 - **Reverse Proxy:** Nginx
 - **Monitoring:** Prometheus, Node Exporter, cAdvisor, Grafana (6 dashboards provisioned as code)
+- **Alerting:** Alertmanager → Discord, rules in git (Prometheus metrics + Loki logs)
 - **Logs:** Loki + Promtail (queried from Grafana)
 - **CI:** four self-hosted GitHub Actions runners — see `ci/README.md`
 - **Bookmark Manager:** Linkding (behind Nginx)
@@ -39,7 +40,7 @@ infra/
 │  ├─ docker-compose.yml       # Linkding container
 │  └─ README.md
 │
-├─ monitoring/                 # Metrics + logs stack
+├─ monitoring/                 # Metrics + logs + alerting stack
 │  ├─ prometheus/              # Prometheus config
 │  │  └─ prometheus.yml
 │  ├─ loki/                    # Loki log store config

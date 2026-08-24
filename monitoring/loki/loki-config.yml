@@ -46,3 +46,27 @@ query_range:
       embedded_cache:
         enabled: true
         max_size_mb: 100
+
+# Log-based alerting. nginx exposes no status codes through stub_status — they exist
+# only in the access log — so any alert on HTTP errors has to be evaluated here rather
+# than in Prometheus. Firing alerts go to the same Alertmanager as the metric rules.
+#
+# TRAP: rules must live in a PER-TENANT subdirectory. With auth_enabled: false the
+# tenant id is the literal string "fake", so the files belong at
+# /etc/loki/rules/fake/*.yml — not at /etc/loki/rules/. Files in the wrong place are
+# ignored silently, with no error in the log. Verify with the ruler API after starting:
+#   docker exec grafana curl -s http://loki:3100/loki/api/v1/rules
+ruler:
+  storage:
+    type: local
+    local:
+      directory: /etc/loki/rules
+  # Scratch space for the ruler's own state — inside the loki-data volume, distinct
+  # from the read-only rules mount above.
+  rule_path: /loki/rules-scratch
+  alertmanager_url: http://alertmanager:9093
+  enable_alertmanager_v2: true
+  enable_api: true
+  ring:
+    kvstore:
+      store: inmemory

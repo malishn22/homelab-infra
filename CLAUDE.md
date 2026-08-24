@@ -46,12 +46,35 @@ and a containerised `nginx -t`.
 - The datasource uids are `prometheus-homelab` and `loki-homelab`, hardcoded in every panel. A
   dashboard exported from the UI may carry a different uid and will render empty — check before
   committing.
-- **Five dashboards**, split application vs infrastructure:
+- **Six dashboards**, split application vs infrastructure:
   `ghms.json`, `spotify-archiver.json` — the two applications.
+  `nginx.json` (Edge) — the reverse proxy; status codes and top paths come from Loki, because
+  stub_status exposes none.
   `host.json` (Host Machine), `containers.json` (Containers), `system-ci.json` (System Services &
   CI) — the same machine at three layers: the hardware, the 20 containers, and the non-container
   load (systemd slices and the four CI runners, which are *not* containers and so are invisible to
   any cAdvisor query filtered to real containers).
+
+### Alerting
+
+- **Rules are YAML in git**, same contract as dashboards: `prometheus/rules/*.yml` for metric
+  alerts, `loki/rules/fake/*.yml` for log alerts. Both push to one Alertmanager, which notifies
+  a single Discord webhook.
+- **Loki rules need the `fake/` tenant subdirectory.** `auth_enabled: false` means the tenant id
+  is the literal `fake`. A rule file one level up is ignored with nothing logged.
+- **The Discord webhook is never in a committed file.** Alertmanager does not expand env vars in
+  its YAML, so `alertmanager.yml` uses `webhook_url_file` pointing at the gitignored
+  `alertmanager/discord_url`. Treat that file exactly like a `.env` — the user writes it.
+- **A missing `discord_url` does not stop Alertmanager starting** (verified against 0.34.0). It
+  boots, listens, and looks healthy; the file is only read when a notification is sent. So a
+  dead notification path is invisible until the first real alert. Prove it with the synthetic
+  `POST /api/v2/alerts` test in `monitoring/README.md`, never by looking at container health.
+- **Never do a full-file Write on `monitoring/docker-compose.yml`** — the `PreToolUse` retention
+  guard denies any write whose new text contains `storage.tsdb.retention`, and that string is
+  already in the prometheus `command:` block. Use narrow Edits anchored elsewhere in the file.
+- `prometheus.yml` is mounted as a single **file**, so `prometheus/rules/` needs its own bind
+  mount. `infra/.gitignore` also blanket-ignores `monitoring/prometheus/*`, so the rules
+  directory required explicit negations — without them a fresh clone comes up with no alerts.
 
 ### PromQL traps on this host — read before writing a panel
 
@@ -102,8 +125,9 @@ touching those flags for exactly this reason.
 
 ## Disk
 
-`/var` is a separate 12 G LVM volume holding `/var/lib/docker`, running around 75 % full — the
-scarce resource on this host. Named volumes and images land there; bind mounts to `/home/...` do
+`/var` is a separate 27 G LVM volume holding `/var/lib/docker`, currently around 36 % full. It was
+12 G and ~75 % full until 2026-07-22, when 16 G was reclaimed from an oversized swap volume — most
+of the conventions here are shaped by that earlier scarcity. Named volumes and images land there; bind mounts to `/home/...` do
 not. That is why `jellyfin/config` and `jellyfin/cache` are bind mounts: transcode scratch would
 otherwise fill `/var`.
 

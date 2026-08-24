@@ -1,0 +1,100 @@
+# Alert rules for the homelab host. Git is the source of truth; Prometheus loads
+# these via rule_files in prometheus.yml and ships firing alerts to Alertmanager.
+#
+# Every expression here reuses a trap documented in infra/CLAUDE.md — name!="" on
+# cAdvisor queries, the fstype/mountpoint filter on filesystems, percent-of-host
+# rather than percent-of-limit (nothing on this host sets a container limit).
+#
+# Check with:  monitoring/prometheus/promtool check rules monitoring/prometheus/rules/*.yml
+
+groups:
+  - name: availability
+    rules:
+      - alert: TargetDown
+        expr: up == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: 'Prometheus cannot scrape {{ $labels.job }} ({{ $labels.instance }})'
+          description: >-
+            Scraping has failed for 5 minutes. Every dashboard panel fed by this job is now
+            stale: an empty graph means blind, not calm. Check `docker ps` for the exporter
+            and `docker logs {{ $labels.instance }}`. If the job is cadvisor, the Containers
+            and System Services dashboards are both affected; if node, Host Machine is.
+
+      - alert: NginxDown
+        expr: nginx_up == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: 'nginx is not answering stub_status'
+          description: >-
+            nginx-exporter is running and being scraped, but nginx itself is not responding.
+            Every hosted service is behind this proxy, so the .home vhosts are down.
+            Check `docker logs nginx-container` — nginx resolves proxy_pass hostnames at
+            config-load time, so an upstream that was down at start keeps it failing until
+            reloaded.
+
+  - name: containers
+    rules:
+      # for: 0m is deliberate. An OOM kill is a discrete past event, not a condition that
+      # persists, so waiting to re-confirm would only delay the notification.
+      - alert: ContainerOOMKilled
+        expr: increase(container_oom_events_total{name!=""}[10m]) > 0
+        for: 0m
+        labels:
+          severity: critical
+        annotations:
+          summary: 'Container {{ $labels.name }} was OOM-killed'
+          description: >-
+            The kernel killed a process in this container for running the host out of memory.
+            Nothing on this box sets a memory limit, so the victim is chosen by heuristic and
+            may not be the container that actually leaked — check Host Machine memory around
+            this time before blaming {{ $labels.name }}.
+
+      - alert: ContainerCrashLooping
+        expr: changes(container_start_time_seconds{name!=""}[15m]) > 2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'Container {{ $labels.name }} has restarted repeatedly'
+          description: >-
+            More than two restarts in 15 minutes. Note a redeploy creates a NEW container id
+            and would not trigger this, so it is a genuine crashloop rather than a deploy.
+            Start with `docker logs --tail 100 {{ $labels.name }}`.
+
+  - name: capacity
+    rules:
+      - alert: VarFillingUp
+        expr: >-
+          100 * (1 - node_filesystem_avail_bytes{job="node", mountpoint="/var"}
+          / node_filesystem_size_bytes{job="node", mountpoint="/var"}) > 85
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: '/var is {{ $value | printf "%.0f" }}% full'
+          description: >-
+            /var holds /var/lib/docker — images, build cache, named volumes and container
+            logs. This filled once before and surfaced as application 500s and a Grafana
+            login loop rather than an obvious disk error. Run
+            ~/homelab/infra/scripts/docker-cleanup.sh, and check the Host Machine filesystem
+            trend panel to see whether CI churn is outpacing the weekly prune.
+
+      - alert: HostMemoryPressure
+        expr: >-
+          100 * (1 - node_memory_MemAvailable_bytes{job="node"}
+          / node_memory_MemTotal_bytes{job="node"}) > 90
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: 'Host memory {{ $value | printf "%.0f" }}% used'
+          description: >-
+            Measured against MemAvailable, so page cache and reclaimable slab are already
+            excluded — this is real pressure. With no container memory limits set, sustained
+            time here ends in an OOM kill of something arbitrary. Check the Containers
+            dashboard for which container is growing.

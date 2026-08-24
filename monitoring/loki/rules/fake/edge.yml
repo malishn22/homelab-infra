@@ -1,0 +1,50 @@
+# Log-based alert rules, evaluated by Loki's ruler and pushed to Alertmanager.
+#
+# This file MUST sit under a per-tenant directory. auth_enabled is false, so the
+# tenant is the literal "fake" — hence loki/rules/fake/. A file one level up is
+# ignored without any error being logged.
+#
+# Thresholds are set against measured behaviour on this host rather than guessed:
+# over the last 7 days nginx served 46,168 requests with ZERO 5xx, and the error
+# log produced 4 lines total. So "> 5 in a short window" sits well clear of noise
+# while still catching anything real.
+#
+# Both expressions return no series when the proxy is idle, which correctly does
+# not fire — traffic here is bursty with long quiet gaps.
+
+groups:
+  - name: edge
+    interval: 1m
+    rules:
+      - alert: NginxServerErrors
+        expr: |
+          sum(count_over_time({container="nginx-container", stream="stdout"}
+            | pattern `<ip> - <user> [<ts>] "<method> <uri> <proto>" <status> <size> "<ref>" "<ua>" "<fwd>"`
+            | status=~"5.." [5m])) > 5
+        for: 5m
+        labels:
+          severity: critical
+          job: nginx
+        annotations:
+          summary: 'nginx is returning 5xx responses'
+          description: >-
+            More than five server errors in five minutes, sustained. 5xx means an upstream
+            failed, not the client — check which service is behind the failing vhost and
+            look at the Edge dashboard's "Requests by status" panel plus the nginx error
+            log. There have been zero 5xx in the preceding week, so this is genuinely new.
+
+      - alert: NginxErrorLogActivity
+        expr: |
+          sum(count_over_time({container="nginx-container", stream="stderr"}[10m])) > 5
+        for: 0m
+        labels:
+          severity: warning
+          job: nginx
+        annotations:
+          summary: 'nginx error log is active'
+          description: >-
+            More than five error-log lines in ten minutes. This log is normally silent
+            (4 lines in the last week), so anything here is worth reading. Common cause on
+            this host: nginx resolves proxy_pass hostnames at config-load time, so a
+            container that was down when nginx started keeps failing until nginx is
+            reloaded.
