@@ -117,6 +117,22 @@ The archiver's web backend exposes app-level metrics (sync runs, run status, dur
 
 ---
 
+### **Health signals**
+Three signals exist on every relevant dashboard specifically because their absence is
+indistinguishable from good news:
+
+- **`Scrape health`** (all five dashboards) — `min(up{job=~"..."})`, scoped to the jobs that
+  dashboard actually queries. If an exporter dies, every panel below goes flat and empty, which
+  reads as "nothing is happening" rather than "I have stopped being able to see". `NO DATA` on
+  this tile means Grafana cannot reach Prometheus at all.
+- **`Container restarts`** (Containers) — `changes(container_start_time_seconds[1h])`. Catches
+  crashloops and `docker restart` of the *same* container. A redeploy creates a new cgroup id and
+  a fresh series, which is correct: that is a deploy, not an incident.
+- **`OOM kills`** (Containers, per container; Host Machine, machine-wide via
+  `node_vmstat_oom_kill`). Nothing on this host sets a memory limit, so when memory runs out the
+  kernel picks a victim by heuristic — possibly Prometheus rather than whatever leaked. A spike
+  here explains an otherwise inexplicable restart.
+
 ### **Grafana**
 Visualizes data coming from Prometheus and Loki. Datasources and dashboards are both provisioned
 from files — see the folder tree below for the four dashboards and `Updating a Dashboard` for how

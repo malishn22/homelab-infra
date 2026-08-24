@@ -62,7 +62,7 @@
       "gridPos": {
         "h": 4,
         "w": 4,
-        "x": 0,
+        "x": 4,
         "y": 1
       },
       "id": 2,
@@ -95,69 +95,6 @@
         }
       ],
       "title": "Containers",
-      "type": "stat"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "prometheus-homelab"
-      },
-      "description": "Distinct Compose projects in the selection. cAdvisor passes Docker's com.docker.compose.* labels straight through as metric labels. GHMS game servers are created through the Docker socket rather than Compose, so they carry no project label and are not counted here \u2014 they still appear in every other panel.",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              }
-            ]
-          },
-          "unit": "none"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 4,
-        "w": 4,
-        "x": 4,
-        "y": 1
-      },
-      "id": 3,
-      "options": {
-        "colorMode": "value",
-        "graphMode": "none",
-        "justifyMode": "auto",
-        "orientation": "auto",
-        "percentChangeColorMode": "standard",
-        "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "fields": "",
-          "values": false
-        },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
-      },
-      "pluginVersion": "12.3.0",
-      "targets": [
-        {
-          "editorMode": "code",
-          "expr": "count(count by (container_label_com_docker_compose_project) (container_last_seen{name!=\"\", container_label_com_docker_compose_project=~\"$stack\", name=~\"$container\", container_label_com_docker_compose_project!=\"\"}))",
-          "instant": true,
-          "legendFormat": "__auto",
-          "range": false,
-          "refId": "A"
-        }
-      ],
-      "title": "Stacks",
       "type": "stat"
     },
     {
@@ -436,7 +373,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 5
+        "y": 14
       },
       "id": 8,
       "panels": [],
@@ -507,7 +444,7 @@
         "h": 9,
         "w": 16,
         "x": 0,
-        "y": 6
+        "y": 15
       },
       "id": 9,
       "options": {
@@ -578,7 +515,7 @@
         "h": 9,
         "w": 8,
         "x": 16,
-        "y": 6
+        "y": 15
       },
       "id": 10,
       "options": {
@@ -625,7 +562,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 15
+        "y": 24
       },
       "id": 11,
       "panels": [],
@@ -696,7 +633,7 @@
         "h": 9,
         "w": 16,
         "x": 0,
-        "y": 16
+        "y": 25
       },
       "id": 12,
       "options": {
@@ -758,7 +695,7 @@
         "h": 9,
         "w": 8,
         "x": 16,
-        "y": 16
+        "y": 25
       },
       "id": 13,
       "options": {
@@ -805,7 +742,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 25
+        "y": 34
       },
       "id": 14,
       "panels": [],
@@ -876,7 +813,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 26
+        "y": 35
       },
       "id": 15,
       "options": {
@@ -969,7 +906,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 26
+        "y": 35
       },
       "id": 16,
       "options": {
@@ -1004,7 +941,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 34
+        "y": 43
       },
       "id": 17,
       "panels": [],
@@ -1040,7 +977,7 @@
         "h": 8,
         "w": 8,
         "x": 0,
-        "y": 35
+        "y": 44
       },
       "id": 18,
       "options": {
@@ -1145,7 +1082,7 @@
         "h": 8,
         "w": 16,
         "x": 8,
-        "y": 35
+        "y": 44
       },
       "id": 19,
       "options": {
@@ -1183,7 +1120,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 43
+        "y": 52
       },
       "id": 20,
       "panels": [],
@@ -1312,6 +1249,74 @@
                 ]
               }
             ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Restarts"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": 0
+                    },
+                    {
+                      "color": "red",
+                      "value": 1
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "OOM"
+            },
+            "properties": [
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-background"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": 0
+                    },
+                    {
+                      "color": "red",
+                      "value": 1
+                    }
+                  ]
+                }
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
           }
         ]
       },
@@ -1319,7 +1324,7 @@
         "h": 10,
         "w": 24,
         "x": 0,
-        "y": 44
+        "y": 53
       },
       "id": 21,
       "options": {
@@ -1385,6 +1390,26 @@
           "legendFormat": "__auto",
           "range": false,
           "refId": "E"
+        },
+        {
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "sum by (name) (changes(container_start_time_seconds{name!=\"\", container_label_com_docker_compose_project=~\"$stack\", name=~\"$container\"}[$__range]))",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "__auto",
+          "range": false,
+          "refId": "F"
+        },
+        {
+          "editorMode": "code",
+          "exemplar": false,
+          "expr": "sum by (name) (increase(container_oom_events_total{name!=\"\", container_label_com_docker_compose_project=~\"$stack\", name=~\"$container\"}[$__range]))",
+          "format": "table",
+          "instant": true,
+          "legendFormat": "__auto",
+          "range": false,
+          "refId": "G"
         }
       ],
       "title": "Containers",
@@ -1400,7 +1425,7 @@
           "id": "filterFieldsByName",
           "options": {
             "include": {
-              "pattern": "^(name|image|container_label_com_docker_compose_project|container_label_com_docker_compose_service|Value #B|Value #C|Value #D|Value #E)$"
+              "pattern": "^(name|image|container_label_com_docker_compose_project|container_label_com_docker_compose_service|Value #B|Value #C|Value #D|Value #E|Value #F|Value #G)$"
             }
           }
         },
@@ -1410,13 +1435,15 @@
             "excludeByName": {},
             "includeByName": {},
             "indexByName": {
-              "Value #B": 4,
-              "Value #C": 5,
-              "Value #D": 6,
-              "Value #E": 7,
+              "Value #B": 5,
+              "Value #C": 6,
+              "Value #D": 7,
+              "Value #E": 8,
+              "Value #F": 3,
+              "Value #G": 4,
               "container_label_com_docker_compose_project": 1,
               "container_label_com_docker_compose_service": 2,
-              "image": 3,
+              "image": 9,
               "name": 0
             },
             "renameByName": {
@@ -1424,6 +1451,8 @@
               "Value #C": "Memory",
               "Value #D": "Disk",
               "Value #E": "Limit",
+              "Value #F": "Restarts",
+              "Value #G": "OOM",
               "container_label_com_docker_compose_project": "Stack",
               "container_label_com_docker_compose_service": "Service",
               "image": "Image",
@@ -1440,7 +1469,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 54
+        "y": 63
       },
       "id": 22,
       "panels": [],
@@ -1481,7 +1510,7 @@
         "h": 11,
         "w": 4,
         "x": 0,
-        "y": 55
+        "y": 64
       },
       "id": 24,
       "options": {
@@ -1527,7 +1556,7 @@
         "h": 11,
         "w": 20,
         "x": 4,
-        "y": 55
+        "y": 64
       },
       "id": 23,
       "options": {
@@ -1557,6 +1586,294 @@
       ],
       "title": "Container logs",
       "type": "logs"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus-homelab"
+      },
+      "description": "Is Prometheus actually scraping cAdvisor and node-exporter, which feed this dashboard?\n\nThis exists because a failed scrape and a healthy quiet system look identical: if cAdvisor dies, every panel below goes flat and empty, which reads as 'nothing is happening' when it really means 'I have stopped being able to see'. OK means the graphs below are current. DOWN means they are stale \u2014 do not trust them. NO DATA means Grafana cannot reach Prometheus at all.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [
+            {
+              "options": {
+                "0": {
+                  "color": "red",
+                  "index": 0,
+                  "text": "DOWN"
+                },
+                "1": {
+                  "color": "green",
+                  "index": 1,
+                  "text": "OK"
+                }
+              },
+              "type": "value"
+            }
+          ],
+          "noValue": "NO DATA",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "red",
+                "value": 0
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 4,
+        "w": 4,
+        "x": 0,
+        "y": 1
+      },
+      "id": 25,
+      "options": {
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "12.3.0",
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "min(up{job=~\"cadvisor|node\"})",
+          "instant": true,
+          "legendFormat": "__auto",
+          "range": false,
+          "refId": "A"
+        }
+      ],
+      "title": "Scrape health",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 5
+      },
+      "id": 26,
+      "panels": [],
+      "title": "Health",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus-homelab"
+      },
+      "description": "Restarts per container in the trailing hour. A crashlooping container is the most common container incident there is, and until now it was invisible on this dashboard.\n\nAll containers are drawn, so a flat set of zero lines means genuinely no restarts \u2014 not a broken panel. Sort the legend by Max to find the offender. Note this catches restarts of the SAME container (crashloops, `docker restart`); a redeploy creates a new container with a new cgroup id and a fresh series, which is correct \u2014 that is a deploy, not an incident.",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 0,
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 6
+      },
+      "id": 27,
+      "options": {
+        "legend": {
+          "calcs": [
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": true,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "12.3.0",
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "sum by (name) (changes(container_start_time_seconds{name!=\"\", container_label_com_docker_compose_project=~\"$stack\", name=~\"$container\"}[1h]))",
+          "legendFormat": "{{name}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "Container restarts",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prometheus-homelab"
+      },
+      "description": "Containers killed by the kernel's out-of-memory killer, per hour.\n\nThis matters more here than on most hosts because nothing on this box sets a memory limit: when memory runs out the kernel picks a victim by heuristic, and it may well pick Prometheus rather than whatever actually leaked. A spike here explains an otherwise inexplicable restart on the panel to the left. The Host Machine dashboard carries the machine-wide equivalent (node_vmstat_oom_kill).",
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 20,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
+          },
+          "decimals": 0,
+          "mappings": [],
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              }
+            ]
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 6
+      },
+      "id": 28,
+      "options": {
+        "legend": {
+          "calcs": [
+            "max"
+          ],
+          "displayMode": "table",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "hideZeros": true,
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "pluginVersion": "12.3.0",
+      "targets": [
+        {
+          "editorMode": "code",
+          "expr": "sum by (name) (increase(container_oom_events_total{name!=\"\", container_label_com_docker_compose_project=~\"$stack\", name=~\"$container\"}[1h]))",
+          "legendFormat": "{{name}}",
+          "range": true,
+          "refId": "A"
+        }
+      ],
+      "title": "OOM kills",
+      "type": "timeseries"
     }
   ],
   "preload": false,

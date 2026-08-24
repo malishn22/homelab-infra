@@ -78,6 +78,11 @@ Every one of these was hit while building the infra dashboards. Full detail in
   *running* GHMS game server. Usage is expressed as a percentage of the host (16 cores / 29.2 GB).
 - `node_filesystem_*` reports three phantom `/etc/*` mounts (Docker's own bind mounts inside the
   exporter); `nvme0n1` and `dm-*` double-count the same I/O and must never be summed together.
+- **`count(up == 0)` returns no series when everything is healthy**, which a stat panel renders as
+  "No data" — precisely the ambiguity a scrape-health tile exists to remove. Use
+  `min(up{job=~"..."})`, which always returns a value, or append `or vector(0)`. Every dashboard
+  carries a `Scrape health` tile scoped to the jobs it actually queries, because a dead exporter
+  and a quiet system produce identical empty graphs.
 - Loki rejects a selector whose every matcher is empty-compatible, so a logs panel needs at least
   one `=~".+"` matcher. An empty logs panel usually means the stack is simply quiet — the
   `Lines in last 7d` tile on the Containers dashboard exists to tell those two cases apart.
