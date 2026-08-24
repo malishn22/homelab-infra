@@ -40,11 +40,47 @@ and a containerised `nginx -t`.
 ## Monitoring
 
 - Dashboards are **JSON in git**, and git is the source of truth. Editing in the Grafana UI without
-  exporting means the next provisioning pass overwrites the change.
-- The datasource uid is `prometheus-homelab`. A dashboard exported from the UI may carry a
-  different uid and will render empty — check before committing.
-- The stack is larger than `monitoring/README.md` currently says: alongside Prometheus, Grafana,
-  node-exporter and nginx-exporter it also runs **cAdvisor, Loki, and Promtail**.
+  exporting means the next provisioning pass overwrites the change. The provider globs the whole
+  `grafana/dashboards/` directory, so adding a dashboard needs no YAML change and no restart —
+  Grafana re-reads the directory roughly every 10 s. Deleting the file deletes the dashboard.
+- The datasource uids are `prometheus-homelab` and `loki-homelab`, hardcoded in every panel. A
+  dashboard exported from the UI may carry a different uid and will render empty — check before
+  committing.
+- **Five dashboards**, split application vs infrastructure:
+  `ghms.json`, `spotify-archiver.json` — the two applications.
+  `host.json` (Host Machine), `containers.json` (Containers), `system-ci.json` (System Services &
+  CI) — the same machine at three layers: the hardware, the 20 containers, and the non-container
+  load (systemd slices and the four CI runners, which are *not* containers and so are invisible to
+  any cAdvisor query filtered to real containers).
+
+### PromQL traps on this host — read before writing a panel
+
+Every one of these was hit while building the infra dashboards. Full detail in
+`monitoring/README.md`.
+
+- node-exporter is scraped as job **`node`**, not `node-exporter`. cAdvisor is job `cadvisor`.
+- **node-exporter cannot see the host's NICs.** It runs on the `homelab` bridge, and
+  `/proc/net/dev` is generated per *network namespace* — resolved from the reading process, not
+  the mount it came through — so `--path.rootfs=/host` does not help. `node_network_*` is this
+  container's own veth (i.e. scrape traffic). Host NIC throughput comes from cAdvisor's root
+  cgroup: `container_network_*{id="/", interface=~"eno1|wlp3s0|tailscale0"}`.
+- **Every cAdvisor container query needs `name!=""`.** Only 20 of ~64 CPU series are containers;
+  the rest are systemd slices and the root cgroup, and the root cgroup is the entire machine.
+- **GHMS game servers carry no Compose labels** — GHMS creates them through the Docker socket, not
+  Compose. An absent label is the empty string, so a
+  `container_label_com_docker_compose_project=~".+"` filter silently drops the whole game-server
+  fleet. The Stack template variable uses `allValue: ".*"` for exactly this reason.
+- **Counting series is not counting containers.** After a redeploy the replaced container keeps
+  reporting under its old cgroup id for ~5 min (Prometheus' lookback), so `count(...)` over-reports.
+  Count distinct names, or aggregate with `max by (name, ...)`.
+- **Nothing sets a CPU limit**, so `container_spec_cpu_quota` does not exist at all and
+  percent-of-limit panels are impossible. `container_spec_memory_limit_bytes` is 0 except on a
+  *running* GHMS game server. Usage is expressed as a percentage of the host (16 cores / 29.2 GB).
+- `node_filesystem_*` reports three phantom `/etc/*` mounts (Docker's own bind mounts inside the
+  exporter); `nvme0n1` and `dm-*` double-count the same I/O and must never be summed together.
+- Loki rejects a selector whose every matcher is empty-compatible, so a logs panel needs at least
+  one `=~".+"` matcher. An empty logs panel usually means the stack is simply quiet — the
+  `Lines in last 7d` tile on the Containers dashboard exists to tell those two cases apart.
 
 ## Retention — read before touching
 

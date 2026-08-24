@@ -16,7 +16,7 @@ I’m using this project both as my real environment I rely on and as a playgrou
 - **Host:** Beelink SER5 MAX Mini PC (Debian based, 24/7 server)
 - **Containerization:** Docker + Docker Compose
 - **Reverse Proxy:** Nginx
-- **Monitoring:** Prometheus, Node Exporter, cAdvisor, Grafana
+- **Monitoring:** Prometheus, Node Exporter, cAdvisor, Grafana (5 dashboards provisioned as code)
 - **Logs:** Loki + Promtail (queried from Grafana)
 - **CI:** four self-hosted GitHub Actions runners — see `ci/README.md`
 - **Bookmark Manager:** Linkding (behind Nginx)
@@ -47,8 +47,8 @@ infra/
 │  ├─ promtail/                # Log shipper config
 │  │  └─ promtail-config.yml
 │  ├─ grafana/                 # Provisioned datasources + dashboards (JSON in git)
-│  │  ├─ provisioning/
-│  │  └─ dashboards/
+│  │  ├─ provisioning/         # Datasource + dashboard-provider YAML
+│  │  └─ dashboards/           # host, containers, system-ci, ghms, spotify-archiver
 │  ├─ .env.example             # Grafana admin vars
 │  ├─ docker-compose.yml       # Prometheus, Grafana, Node/Nginx Exporter, cAdvisor, Loki, Promtail
 │  └─ README.md
