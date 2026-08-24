@@ -210,6 +210,20 @@ docker exec prometheus wget -qO- http://alertmanager:9093/metrics | grep -E 'ale
 `notifications_total` up and `failed_total` at zero means it sent. If `failed_total` is
 non-zero, then `docker logs alertmanager` will have the reason.
 
+**How often you get pinged:** once when a problem starts, once when it clears, nothing in
+between. `repeat_interval` is set to a year, which is Alertmanager's only way of saying "never
+repeat". Prometheus re-sends a firing alert to Alertmanager every 60s, but that is internal —
+it is how Alertmanager knows the problem is still live, and it never reaches Discord.
+
+The trade-off is deliberate: a missed notification is never repeated, so a problem you slept
+through is only visible on a dashboard. Set `repeat_interval` to `12h` if you would rather be
+reminded.
+
+A RESOLVED message means the condition actually cleared — Prometheus stops matching the
+expression and marks the alert ended, usually within one evaluation cycle of the fix. The one
+exception is Prometheus itself going down: alerts then age out and report resolved without
+anything improving, which is what `TargetDown` exists to catch.
+
 ### **Alert rules**
 Rules are **YAML in git**, exactly like dashboards — the running config is never the source of
 truth.

@@ -40,17 +40,15 @@ route:
   group_wait: 30s
   # Wait this long before notifying about NEW alerts added to an existing group.
   group_interval: 5m
-  # How long before an unresolved alert is repeated. 12h is deliberately long:
-  # a homelab alert that is still true tomorrow does not need hourly nagging.
-  repeat_interval: 12h
-
-  routes:
-    # Critical alerts repeat more often, because they mean something is actually
-    # down rather than trending badly.
-    - matchers:
-        - severity="critical"
-      receiver: discord
-      repeat_interval: 2h
+  # Effectively "never repeat". Alertmanager has no way to disable repeats, so this
+  # is a year — long enough that no incident will ever reach it.
+  #
+  # Chosen deliberately: one ping when a problem starts, one when it clears, and
+  # nothing in between. The trade-off is real and worth knowing — if you miss the
+  # single notification, nothing will ever tell you again, and you would only find
+  # out by opening a dashboard. Set this to 12h (2h for critical) to get a reminder
+  # for anything still broken later.
+  repeat_interval: 8760h
 
 receivers:
   - name: discord
