@@ -8,8 +8,8 @@ services:
       # Render templates/*.template with envsubst, substituting ONLY these vars (so nginx's
       # own $host/$scheme/$http_upgrade/etc. are left untouched). At container start the
       # nginx image renders them into conf.d/, taking the real hostnames from .env
-      # (CALIMALI_PUBLIC_HOST, JELLYFIN_SERVER_NAME). Those rendered conf.d/*.conf are gitignored.
-      NGINX_ENVSUBST_FILTER: "(CALIMALI_|JELLYFIN_)"
+      # (CALIMALI_PUBLIC_HOST). Those rendered conf.d/*.conf are gitignored.
+      NGINX_ENVSUBST_FILTER: "(CALIMALI_)"
     ports:
       - "${NGINX_HOST_PORT:-80}:80"
       - "${NGINX_HOST_PORT_HTTPS:-443}:443"

@@ -11,10 +11,10 @@ structure tree in `README.md` in sync when directories change.
 
 - **Commits**: plain imperative, sentence case, no Conventional Commits prefixes.
   Real examples: "Add weekly Docker cleanup script", "Cap Prometheus TSDB retention to bound /var
-  growth", "Proxy Jellyfin at media.example.lan". The body explains *why*, and specifically names
+  growth", "Remove Jellyfin stack and vhost". The body explains *why*, and specifically names
   any constraint that is invisible from the diff.
 - **A stack is done** when it has all four of: `docker-compose.yml`, `.env`, `.env.example`,
-  `README.md`. `jellyfin/README.md` is the model to copy — run steps, then a caveats section that
+  `README.md`. `linkding/README.md` is the model to copy — run steps, then a caveats section that
   names the specific trap.
 - Every stack joins the **external** bridge network `homelab` (`external: true`). Compose must not
   create its own, or containers stop resolving each other by name.
@@ -26,8 +26,8 @@ nginx resolves literal `proxy_pass` hostnames **at config-load time**, not per r
 fine.
 
 **Adding or editing a vhost in `nginx/conf.d/` therefore requires adding a matching `--add-host`
-stub to `.github/workflows/nginx-ci.yml`**, or the build goes red. That is why `linkding`,
-`calimali-api`, and `jellyfin` are listed there. `minecraft.conf` is the exception that proves it:
+stub to `.github/workflows/nginx-ci.yml`**, or the build goes red. That is why `linkding` and
+`calimali-api` are listed there. `minecraft.conf` is the exception that proves it:
 it uses a `resolver` with a variable `proxy_pass`, which defers resolution to request time and so
 needs no stub.
 
@@ -141,8 +141,8 @@ touching those flags for exactly this reason.
 `/var` is a separate 27 G LVM volume holding `/var/lib/docker`, currently around 36 % full. It was
 12 G and ~75 % full until 2026-07-22, when 16 G was reclaimed from an oversized swap volume — most
 of the conventions here are shaped by that earlier scarcity. Named volumes and images land there; bind mounts to `/home/...` do
-not. That is why `jellyfin/config` and `jellyfin/cache` are bind mounts: transcode scratch would
-otherwise fill `/var`.
+not. That is why bind mounts like `linkding/data` live under `/home` instead of a named volume:
+their growth would otherwise fill `/var`.
 
 `scripts/docker-cleanup.sh` runs weekly via cron (`0 4 * * 0`) and prunes images, build cache, and
 stopped containers older than 168h. It appends to `scripts/docker-cleanup.log`, printing
@@ -151,16 +151,15 @@ does not capture cron `CMD` lines in the journal.
 
 ## Never commit
 
-Any `.env`, `nginx/certs/`, the env-rendered `nginx/conf.d/{calimali-api,jellyfin}.conf` (they
-carry the real public hostnames), `jellyfin/config/`, `jellyfin/cache/`, `linkding/data/`, and
-`scripts/docker-cleanup.log`.
+Any `.env`, `nginx/certs/`, the env-rendered `nginx/conf.d/calimali-api.conf` (it carries the
+real public hostname), `linkding/data/`, and `scripts/docker-cleanup.log`.
 
 ## Known rough edges
 
-- The `jellyfin` and `calimali-api` vhosts are env-rendered templates: `templates/*.template` →
+- The `calimali-api` vhost is an env-rendered template: `templates/*.template` →
   `conf.d/` at container start via envsubst, with `server_name` from `.env`. The rendered
-  `conf.d/{jellyfin,calimali-api}.conf` are gitignored so the real hostnames aren't committed.
-  `calimali-api` is intentionally HTTP-only (TLS terminated upstream; JWT-gated) — not a bug,
+  `conf.d/calimali-api.conf` is gitignored so the real hostname isn't committed.
+  It is intentionally HTTP-only (TLS terminated upstream; JWT-gated) — not a bug,
   don't "fix" it to 443.
 - `infra/.env` exists at the repo root, referenced by no README.
 - Nothing rotates the runner `_diag` logs — see `ci/README.md`.

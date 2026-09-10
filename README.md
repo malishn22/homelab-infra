@@ -21,7 +21,6 @@ I’m using this project both as my real environment I rely on and as a playgrou
 - **Logs:** Loki + Promtail (queried from Grafana)
 - **CI:** four self-hosted GitHub Actions runners — see `ci/README.md`
 - **Bookmark Manager:** Linkding (behind Nginx)
-- **Media Server:** Jellyfin (behind Nginx, VAAPI hardware transcoding)
 - **Config Management Style:** env files + versioned configs
 
 ---
@@ -30,11 +29,6 @@ I’m using this project both as my real environment I rely on and as a playgrou
 
 ```text
 infra/
-├─ jellyfin/                   # Jellyfin media server stack
-│  ├─ .env.example             # Example env vars for Jellyfin
-│  ├─ docker-compose.yml       # Jellyfin container (iGPU passthrough, media mounted :ro)
-│  └─ README.md
-│
 ├─ linkding/                   # Linkding bookmark manager stack
 │  ├─ .env.example             # Example env vars for Linkding
 │  ├─ docker-compose.yml       # Linkding container
@@ -57,7 +51,6 @@ infra/
 ├─ nginx/                      # Global reverse proxy for all services
 │  ├─ conf.d/                  # Nginx Config
 │  │  ├─ calimali-api.conf     # Reverse Proxy for the Calimali API
-│  │  ├─ jellyfin.conf         # Reverse Proxy for Jellyfin
 │  │  ├─ linkding.conf         # Reverse Proxy for Linkding
 │  │  ├─ minecraft.conf        # Reverse Proxy for the Minecraft web UI
 │  │  └─ stub_status.conf      # stub_status for metrics in Monitoring
