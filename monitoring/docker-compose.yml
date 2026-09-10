@@ -1,6 +1,6 @@
 services:
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus@sha256:49214755b6153f90a597adcbff0252cc61069f8ab69ce8411285cd4a560e8038  # was prom/prometheus:latest, pinned 2026-09-10
     container_name: prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
@@ -20,7 +20,7 @@ services:
     restart: unless-stopped
 
   node-exporter:
-    image: prom/node-exporter:latest
+    image: prom/node-exporter@sha256:3ac34ce007accad95afed72149e0d2b927b7e42fd1c866149b945b84737c62c3  # was prom/node-exporter:latest, pinned 2026-09-10
     container_name: node-exporter
     command:
       - '--path.rootfs=/host'
@@ -31,7 +31,7 @@ services:
     restart: unless-stopped
 
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana@sha256:70d9599b186ce287be0d2c5ba9a78acb2e86c1a68c9c41449454d0fc3eeb84e8  # was grafana/grafana:latest, pinned 2026-09-10
     container_name: grafana
     restart: unless-stopped
     env_file:
@@ -52,7 +52,7 @@ services:
       - './grafana/dashboards:/etc/grafana/dashboards:ro'
    
   nginx-exporter:
-    image: nginx/nginx-prometheus-exporter:latest
+    image: nginx/nginx-prometheus-exporter@sha256:bf76e58df548a13e52bd543ac70f6d3d667e14884e8b51c149bd81994ca75ccd  # was nginx/nginx-prometheus-exporter:latest, pinned 2026-09-10
     container_name: nginx-exporter
     command:
       - -nginx.scrape-uri=http://nginx:8080/stub_status
@@ -65,7 +65,7 @@ services:
   # Per-container CPU/mem/liveness metrics. Scraped over the homelab network as
   # cadvisor:8080 (host 8080 is taken by calimali, so no port is published).
   cadvisor:
-    image: gcr.io/cadvisor/cadvisor:latest
+    image: gcr.io/cadvisor/cadvisor@sha256:3de2bd5203120b866d74a9b283b2ffb8ec382fbf9dc321814700c6ea6f44ec57  # was gcr.io/cadvisor/cadvisor:latest, pinned 2026-09-10
     container_name: cadvisor
     restart: unless-stopped
     privileged: true
@@ -83,7 +83,7 @@ services:
   # Log store for container stdout. Reachable in-network as loki:3100
   # (Grafana datasource + Promtail push); no host port published.
   loki:
-    image: grafana/loki:latest
+    image: grafana/loki@sha256:70b9f699fc9bb868b62f1cfd4f787dfa50242f1fd92e6089787d5d7daea75fe8  # was grafana/loki:latest, pinned 2026-09-10
     container_name: loki
     restart: unless-stopped
     command: -config.file=/etc/loki/loki-config.yml
@@ -99,7 +99,7 @@ services:
   # Discovers all containers via the Docker API and ships their stdout to Loki.
   # user: root so it can read the root:docker-owned docker.sock.
   promtail:
-    image: grafana/promtail:latest
+    image: grafana/promtail@sha256:6cfa64ec432b24a912d640e2edb940eeae2666f61861a66c121d763dd7241381  # was grafana/promtail:latest, pinned 2026-09-10
     container_name: promtail
     restart: unless-stopped
     user: root
@@ -129,7 +129,7 @@ services:
   # real webhook BEFORE `up`, then prove delivery with the synthetic-alert test in
   # README.md. Do not assume it works because the container is green.
   alertmanager:
-    image: prom/alertmanager:latest
+    image: prom/alertmanager@sha256:690c7b525f4367aa91f73e2f91c632206d32e97c6384bdbf2fb7a861b420340d  # was prom/alertmanager:latest, pinned 2026-09-10
     container_name: alertmanager
     restart: unless-stopped
     # Discord is DNS-blocked by the ISP on this connection: the default resolver returns

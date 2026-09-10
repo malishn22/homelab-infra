@@ -1,7 +1,7 @@
 services:
   linkding:
     container_name: "${LD_CONTAINER_NAME:-linkding}"
-    image: sissbruecker/linkding:latest
+    image: sissbruecker/linkding@sha256:e4fbafee44388d8555e34ffdc507224302989265009fc82f5f2762b789f0385a  # was sissbruecker/linkding:latest, pinned 2026-09-10
     ports:
       - "${LD_HOST_PORT:-9090}:9090"
     volumes:

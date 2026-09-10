@@ -1,7 +1,7 @@
 services:
   nginx:
     container_name: "${NGINX_CONTAINER_NAME:-nginx-reverse-proxy}"
-    image: nginx:latest
+    image: nginx@sha256:553f64aecdc31b5bf944521731cd70e35da4faed96b2b7548a3d8e2598c52a42  # was nginx:latest, pinned 2026-09-10
     env_file:
       - ./.env
     environment:
