@@ -416,7 +416,7 @@
         "type": "prometheus",
         "uid": "prometheus-homelab"
       },
-      "description": "Playlists / tracks / artists in the archive over time. Grafana keeps the history the app's current-count view doesn't \u2014 spot a sync that added nothing, or an unexpected jump. Playlists is on the right axis (its scale is tiny next to tracks/artists).",
+      "description": "Archive growth over the last 7 days: net change in playlists / tracks / artists since then. Playlists is on the right axis (its scale is tiny next to tracks/artists).",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -485,6 +485,34 @@
               {
                 "id": "custom.axisLabel",
                 "value": "playlists"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Tracks"
+            },
+            "properties": [
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Artists"
+            },
+            "properties": [
+              {
+                "id": "decimals",
+                "value": 0
               }
             ]
           }
@@ -516,21 +544,21 @@
       "targets": [
         {
           "editorMode": "code",
-          "expr": "spotify_archiver_tracks",
+          "expr": "floor(delta(spotify_archiver_tracks[7d]))",
           "legendFormat": "Tracks",
           "range": true,
           "refId": "A"
         },
         {
           "editorMode": "code",
-          "expr": "spotify_archiver_artists",
+          "expr": "floor(delta(spotify_archiver_artists[7d]))",
           "legendFormat": "Artists",
           "range": true,
           "refId": "B"
         },
         {
           "editorMode": "code",
-          "expr": "spotify_archiver_playlists",
+          "expr": "floor(delta(spotify_archiver_playlists[7d]))",
           "legendFormat": "Playlists",
           "range": true,
           "refId": "C"
